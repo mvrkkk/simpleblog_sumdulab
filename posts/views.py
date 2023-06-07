@@ -6,14 +6,11 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
-from .models import Post, User
-from .forms import PostForm
-
-# Create your views here.
+from .models import Post, User, Comment
+from .forms import PostForm, CommentForm
 
 def index(request):
     posts = Post.objects.all()
-
     ctx = {'posts': posts}
     return render(request, 'posts/index.html', ctx)
 
@@ -88,3 +85,19 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "posts/register.html")
+
+
+@login_required(login_url='login')
+def create_comment(request):
+
+    if request.POST:
+        form_data = CommentForm(request.POST)
+        if form_data.is_valid():
+            form = form_data.save(commit=False)
+            form.user = request.user
+            form.save()
+            return HttpResponseRedirect(f'post/{form.id}')
+
+    form = CommentForm()
+    ctx = {'form': form}
+    return render(request, 'posts/createcomment.html', ctx)
