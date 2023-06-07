@@ -10,6 +10,28 @@
     <h4>By: {{post.user.username}}</h4>
     <h5>{{post.created_at}}</h5>
     <div>{{post.body|safe}}</div>
+
+    <h5>Comments</h5>
+    {% if not post.comments.all %}
+        No comments yet...<a href="#">Add one</a>
+    {% else %}
+        <br/><br/>
+        <a href="{% url 'create_comment' %}">Add comment</a>
+        <br/><br/>
+        {% for comment in post.comments.all %}
+            <strong>
+                {{ comment.created }} - {{ comment.name }}
+            </strong>
+                <br/>
+                {{ comment.body }}
+                <br/><br/>
+
+        {% endfor %}
+    {% endif %}
+    <hr>
+    <br/>
+    <a href="{% url 'create_comment' %}">Add comment</a>
+    <br/>
 </div>
 
 {% endblock %}
