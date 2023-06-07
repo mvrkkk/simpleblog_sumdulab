@@ -1,0 +1,14 @@
+{% extends "posts/layout.html" %}
+
+{% load crispy_forms_tags %}
+{% block body %}
+    <h1>Write a comment</h1>
+<form action="{% url 'create_comment' %}" method="post">
+    {% csrf_token %}
+    {{form.media}}
+    {%for field in form%}
+        <div class="col-md-6 p-2">{{field|as_crispy_field}}</div>
+    {%endfor%}
+    <input class="btn btn-primary" type="submit" value="Submit">
+</form>
+{% endblock %}
