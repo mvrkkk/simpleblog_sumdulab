@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase,  Client
 from .models import User, Post, Comment
 from django.urls import reverse, resolve
 from . import views
@@ -81,3 +81,45 @@ class UrlsTestCase(TestCase):
     def test_create_comment_url(self):
         url = reverse('create_comment')
         self.assertEqual(resolve(url).func, views.create_comment)
+
+
+class ViewsTestCase(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
+        self.post = Post.objects.create(title='Test Post', body='This is a test post.', user=self.user)
+
+    def test_index_view(self):
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'posts/index.html')
+        self.assertContains(response, self.post.title)
+
+    def test_post_view(self):
+        response = self.client.get(reverse('post', args=[self.post.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'posts/post.html')
+        self.assertContains(response, self.post.title)
+
+    def test_create_post_view(self):
+        self.client.login(username='testuser', password='testpassword')
+        response = self.client.post(reverse('create_post'), {'title': 'New Post', 'body': 'This is a new post.'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('post', args=[2]))  # Assuming this is the ID of the newly created post
+
+    def test_login_view(self):
+        response = self.client.post(reverse('login'), {'username': 'testuser', 'password': 'testpassword'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('index'))
+
+    def test_logout_view(self):
+        self.client.login(username='testuser', password='testpassword')
+        response = self.client.get(reverse('logout'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('index'))
+
+    def test_register_view(self):
+        response = self.client.post(reverse('register'), {'username': 'newuser', 'password': 'newpassword', 'confirmation': 'newpassword', 'email': 'test@example.com'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('index'))
